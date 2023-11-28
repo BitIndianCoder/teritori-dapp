@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { View, ViewStyle } from "react-native";
+import { Image, View, ViewStyle } from "react-native";
 
+import tnsProfileAvatar from "../../../assets/default-images/default-name-nft.png";
+import tnsProfileCover from "../../../assets/default-images/tns-profile-cover.png";
+import uploadCloudIcon from "../../../assets/icons/upload-cloud.svg";
 import { Metadata } from "../../contracts-clients/teritori-name-service/TeritoriNameService.types";
-import { neutral17, neutral77 } from "../../utils/style/colors";
+import { neutral17, neutral33, neutral77 } from "../../utils/style/colors";
+import { layout } from "../../utils/style/layout";
 import { BrandText } from "../BrandText";
 import { ExternalLink } from "../ExternalLink";
 import { PrimaryButton } from "../buttons/PrimaryButton";
 import { TextInputCustom } from "../inputs/TextInputCustom";
-
 // TODO: Later, create a reusable FormBase cpt to avoid writing too much code and call it in NameDataForm.tsx. Maybe use react-hook-form ?
 
 export const NameDataForm: React.FC<{
@@ -110,8 +113,11 @@ export const NameDataForm: React.FC<{
       ) : null}
       <TextInputCustom<Metadata>
         name="name"
-        style={[inputStyle, !isMintPath && { marginTop: 4 }]}
-        label="NAME"
+        style={[inputStyle]}
+        label="Name"
+        rules={{ required: true }}
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Type name here"
         value={publicName}
         onChangeText={setPublicName}
@@ -121,34 +127,86 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="public_bio"
         style={inputStyle}
-        label="BIO"
+        label="Bio"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Type bio here"
         value={public_bio}
         onChangeText={setBio}
         squaresBackgroundColor={neutral17}
       />
-      <TextInputCustom<Metadata>
-        name="image"
-        style={inputStyle}
-        label="AVATAR IMAGE URL"
-        placeHolder="Insert image URL here"
-        value={image}
-        onChangeText={setImageUrl}
-        squaresBackgroundColor={neutral17}
-      />
-      <TextInputCustom<Metadata>
-        name="public_profile_header"
-        style={inputStyle}
-        label="BANNER IMAGE URL"
-        placeHolder="Insert image URL here"
-        value={bannerImage}
-        onChangeText={setBannerImage}
-        squaresBackgroundColor={neutral17}
-      />
+      <View
+        style={{
+          borderRadius: layout.borderRadius,
+          borderWidth: 1,
+          marginBottom: layout.spacing_x1,
+          padding: layout.spacing_x1_5,
+          backgroundColor: neutral17,
+        }}
+      >
+        <TextInputCustom<Metadata>
+          name="image"
+          style={inputStyle}
+          label="Avatar URL"
+          noBrokenCorners
+          variant="labelOutside"
+          placeHolder="https://website.com/avatar.jpg"
+          postIconSVG={uploadCloudIcon}
+          value={image}
+          onChangeText={setImageUrl}
+          squaresBackgroundColor={neutral17}
+        />
+        <TextInputCustom<Metadata>
+          name="public_profile_header"
+          style={inputStyle}
+          label="Cover Image URL"
+          noBrokenCorners
+          postIconSVG={uploadCloudIcon}
+          variant="labelOutside"
+          placeHolder="https://website.com/coverimage.jpg"
+          value={bannerImage}
+          onChangeText={setBannerImage}
+          squaresBackgroundColor={neutral17}
+        />
+        <View
+          style={{
+            marginTop: layout.spacing_x1,
+            marginBottom: layout.spacing_x3,
+          }}
+        >
+          <Image
+            source={{ uri: bannerImage || tnsProfileCover }}
+            style={{
+              width: 388,
+              height: 100,
+              borderRadius: layout.borderRadius,
+              borderWidth: 1,
+              borderColor: neutral33,
+            }}
+          />
+          <Image
+            source={{ uri: image || tnsProfileAvatar }}
+            resizeMode="cover"
+            style={{
+              width: 50,
+              height: 50,
+              position: "absolute",
+              bottom: -24,
+              left: 16,
+              borderRadius: 25,
+              borderWidth: 1,
+              borderColor: neutral33,
+            }}
+          />
+        </View>
+      </View>
+
       <TextInputCustom<Metadata>
         name="email"
         style={inputStyle}
-        label="EMAIL"
+        label="Email"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Type email here"
         value={email}
         onChangeText={setEmail}
@@ -157,7 +215,9 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="external_url"
         style={inputStyle}
-        label="WEBSITE"
+        label="Website"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Type/insert link here"
         value={external_url}
         onChangeText={setWebsite}
@@ -166,7 +226,9 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="twitter_id"
         style={inputStyle}
-        label="TWITTER"
+        label="Twitter (X)"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Link to Twitter account"
         value={twitter_id}
         onChangeText={setTwitter}
@@ -175,7 +237,9 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="discord_id"
         style={inputStyle}
-        label="DISCORD"
+        label="Discord"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Link to Discord"
         value={discord_id}
         onChangeText={setDiscord}
@@ -184,7 +248,9 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="telegram_id"
         style={inputStyle}
-        label="TELEGRAM USERNAME"
+        label="Telegram Username"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="@nickname"
         value={telegram_id}
         onChangeText={setTelegrameUsername}
@@ -193,7 +259,9 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="keybase_id"
         style={inputStyle}
-        label="KEYBASE.IO"
+        label="Keybase.io"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Type/insert link here"
         value={keybase_id}
         onChangeText={setKeybaseIo}
@@ -202,18 +270,20 @@ export const NameDataForm: React.FC<{
       <TextInputCustom<Metadata>
         name="validator_operator_address"
         style={inputStyle}
-        label="VALIDATOR OPERATOR ADDRESS"
+        label="Validator Operator Address"
+        noBrokenCorners
+        variant="labelOutside"
         placeHolder="Type/insert link here"
         value={validator_operator_address}
         onChangeText={setValidatorOperatorAddress}
         squaresBackgroundColor={neutral17}
       />
       <PrimaryButton
-        size="XL"
+        size="M"
         text={btnLabel}
         disabled={disabled}
         onPress={handlePressBtn}
-        style={{ marginTop: 8, alignSelf: "center" }}
+        style={{ marginHorizontal: 8, alignSelf: "center" }}
         squaresBackgroundColor={neutral17}
         loader
       />

@@ -53,6 +53,7 @@ export interface TextInputCustomProps<T extends FieldValues>
   label: string;
   variant?: "regular" | "labelOutside" | "noStyle";
   iconSVG?: React.FC<SvgProps>;
+  postIconSVG?: React.FC<SvgProps>;
   placeHolder?: string;
   squaresBackgroundColor?: string;
   style?: StyleProp<ViewStyle>;
@@ -139,6 +140,7 @@ export const TextInputCustom = <T extends FieldValues>({
   subtitle,
   labelStyle,
   iconSVG,
+  postIconSVG,
   hideLabel,
   valueModifier,
   errorStyle,
@@ -292,7 +294,12 @@ export const TextInputCustom = <T extends FieldValues>({
               {...restProps}
             />
           </View>
-
+          {postIconSVG && (
+            <>
+              <SpacerRow size={1} />
+              <SVG source={postIconSVG} width={16} height={16} />
+            </>
+          )}
           {isLoading ? (
             <ActivityIndicator color={secondaryColor} size="small" />
           ) : (
