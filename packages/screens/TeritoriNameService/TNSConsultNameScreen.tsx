@@ -9,7 +9,6 @@ import { PrimaryButton } from "../../components/buttons/PrimaryButton";
 import { SecondaryButton } from "../../components/buttons/SecondaryButton";
 import ModalBase from "../../components/modals/ModalBase";
 import { TNSSendFundsModal } from "../../components/modals/teritoriNameService/TNSSendFundsModal";
-import { NameData } from "../../components/teritoriNameService/NameData";
 import { NameNFT } from "../../components/teritoriNameService/NameNFT";
 import { useFeedbacks } from "../../context/FeedbacksProvider";
 import { useTNS } from "../../context/TNSProvider";
@@ -108,6 +107,7 @@ const OwnerActions: React.FC<{
           style={{ marginRight: 24 }}
           // TODO: if no signed, connectKeplr, then, open modal
           onPress={() => {
+            onClose();
             navigation.navigate("UserPublicProfile", { id: ownerId });
           }}
           squaresBackgroundColor={neutral17}
@@ -251,7 +251,7 @@ export const TNSConsultNameScreen: React.FC<TNSConsultNameProps> = ({
               >
                 {isOwnedByUser ? (
                   <CopyToClipboard
-                    text={`https://${window.location.host}/tns/token/${name}`}
+                    text={`${window.location.protocol}//${window.location.host}/tns/token/${name}`}
                     squaresBackgroundColor={neutral17}
                   />
                 ) : (
@@ -264,7 +264,6 @@ export const TNSConsultNameScreen: React.FC<TNSConsultNameProps> = ({
                     )}
                   </>
                 )}
-                <NameData token={token} name={name} style={{ marginTop: 20 }} />
               </View>
             )}
           </>
