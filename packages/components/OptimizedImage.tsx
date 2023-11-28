@@ -56,7 +56,7 @@ export const OptimizedImage: React.FC<
   },
 );
 
-const transformURI = (
+export const transformURI = (
   uri: string | undefined,
   width: number,
   height: number,

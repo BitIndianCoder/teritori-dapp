@@ -30,7 +30,6 @@ import {
   mustGetCosmosNetwork,
 } from "../../networks";
 import { useAppNavigation } from "../../utils/navigation";
-import { neutral17 } from "../../utils/style/colors";
 import { layout } from "../../utils/style/layout";
 
 const NotOwnerActions: React.FC<{

@@ -28,3 +28,28 @@ export const pinataPinFileToIPFS = async ({
     console.error("Error pinning " + file.fileName + " to IPFS", err);
   }
 };
+
+export const pinataPinFileListToIPFS = async ({
+  file,
+  pinataJWTKey,
+}: {
+  file: FileList;
+  pinataJWTKey: string;
+}) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file[0]);
+    const responseFile = await axios({
+      method: "post",
+      url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      data: formData,
+      headers: {
+        Authorization: "Bearer " + pinataJWTKey,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return responseFile.data;
+  } catch (err) {
+    console.error("Error pinning " + file[0] + " to IPFS", err);
+  }
+};

@@ -18,6 +18,7 @@ import {
 } from "react-hook-form";
 import {
   ActivityIndicator,
+  Pressable,
   StyleProp,
   StyleSheet,
   TextInput,
@@ -54,6 +55,7 @@ export interface TextInputCustomProps<T extends FieldValues>
   variant?: "regular" | "labelOutside" | "noStyle";
   iconSVG?: React.FC<SvgProps>;
   postIconSVG?: React.FC<SvgProps>;
+  postIconSVGonPress?: () => void;
   placeHolder?: string;
   squaresBackgroundColor?: string;
   style?: StyleProp<ViewStyle>;
@@ -141,6 +143,7 @@ export const TextInputCustom = <T extends FieldValues>({
   labelStyle,
   iconSVG,
   postIconSVG,
+  postIconSVGonPress,
   hideLabel,
   valueModifier,
   errorStyle,
@@ -297,7 +300,9 @@ export const TextInputCustom = <T extends FieldValues>({
           {postIconSVG && (
             <>
               <SpacerRow size={1} />
-              <SVG source={postIconSVG} width={16} height={16} />
+              <Pressable onPress={postIconSVGonPress}>
+                <SVG source={postIconSVG} width={16} height={16} />
+              </Pressable>
             </>
           )}
           {isLoading ? (
