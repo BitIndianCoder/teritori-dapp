@@ -9,10 +9,12 @@ import { TNSSendFundsModal } from "../../components/modals/teritoriNameService/T
 import { FindAName } from "../../components/teritoriNameService/FindAName";
 import { useTNS } from "../../context/TNSProvider";
 import { useNSMintAvailability } from "../../hooks/useNSMintAvailability";
+import { useNSNameOwner } from "../../hooks/useNSNameOwner";
 import { useNSTokensByOwner } from "../../hooks/useNSTokensByOwner";
 import { useSelectedNetworkId } from "../../hooks/useSelectedNetwork";
 import useSelectedWallet from "../../hooks/useSelectedWallet";
-import { getCosmosNetwork } from "../../networks";
+import { getCosmosNetwork, getUserId } from "../../networks";
+import { useAppNavigation } from "../../utils/navigation";
 import { neutral17 } from "../../utils/style/colors";
 
 interface TNSExploreScreenProps extends TNSModalCommonProps {}
@@ -25,6 +27,11 @@ export const TNSExploreScreen: React.FC<TNSExploreScreenProps> = ({
   const selectedWallet = useSelectedWallet();
   const networkId = useSelectedNetworkId();
   const network = getCosmosNetwork(networkId);
+  const navigation = useAppNavigation();
+  const { nameOwner } = useNSNameOwner(
+    networkId,
+    name + network?.nameServiceTLD || "",
+  );
   const { tokens } = useNSTokensByOwner(selectedWallet?.userId);
   const tokenId = (name + network?.nameServiceTLD || "").toLowerCase();
   const { nameAvailable, nameError, loading } = useNSMintAvailability(
@@ -66,9 +73,11 @@ export const TNSExploreScreen: React.FC<TNSExploreScreenProps> = ({
             <PrimaryButton
               size="XL"
               width={154}
-              text="View"
+              text="View Owner"
               onPress={() => {
-                onClose("TNSConsultName");
+                navigation.navigate("UserPublicProfile", {
+                  id: getUserId(networkId, nameOwner),
+                });
               }}
               squaresBackgroundColor={neutral17}
             />
@@ -76,7 +85,7 @@ export const TNSExploreScreen: React.FC<TNSExploreScreenProps> = ({
               size="XL"
               width={154}
               disabled={tokens.includes(tokenId) || !selectedWallet?.connected}
-              text="Send funds"
+              text="Send Funds"
               onPress={() => setSendFundsModalVisible(true)}
               squaresBackgroundColor={neutral17}
             />

@@ -31,7 +31,7 @@ import {
   mustGetCosmosNetwork,
 } from "../../networks";
 import { useAppNavigation } from "../../utils/navigation";
-import { neutral17, neutral33 } from "../../utils/style/colors";
+import { neutral17 } from "../../utils/style/colors";
 
 const NotOwnerActions: React.FC<{
   tokenId: string;
@@ -68,10 +68,9 @@ const NotOwnerActions: React.FC<{
       <PrimaryButton
         size="XL"
         disabled={!isKeplrConnected && !isLeapConnected}
-        text="Send funds"
+        text="Send Funds"
         // TODO: if no signed, connectKeplr, then, open modal
         onPress={() => setSendFundsModalVisible(true)}
-        squaresBackgroundColor={neutral17}
       />
       <TNSSendFundsModal
         onClose={() => setSendFundsModalVisible(false)}
@@ -103,9 +102,8 @@ const OwnerActions: React.FC<{
       {isPrimary && (
         <SecondaryButton
           size="M"
-          text="Profile"
+          text="View Profile"
           style={{ marginRight: 24 }}
-          // TODO: if no signed, connectKeplr, then, open modal
           onPress={() => {
             onClose();
             navigation.navigate("UserPublicProfile", { id: ownerId });
@@ -115,7 +113,7 @@ const OwnerActions: React.FC<{
       )}
       <SecondaryButton
         size="M"
-        text="Update metadata"
+        text="Update"
         onPress={() => {
           onClose("TNSUpdateName");
         }}
@@ -209,11 +207,6 @@ export const TNSConsultNameScreen: React.FC<TNSConsultNameProps> = ({
       hideMainSeparator
       label={name}
       width={457}
-      contentStyle={{
-        backgroundColor: neutral17,
-        borderWidth: 1,
-        borderColor: neutral33,
-      }}
       scrollable
     >
       <View
