@@ -4,7 +4,6 @@ import { View } from "react-native";
 
 import { TNSModalCommonProps } from "./TNSHomeScreen";
 import { BrandText } from "../../components/BrandText";
-import { CopyToClipboard } from "../../components/CopyToClipboard";
 import { PrimaryButton } from "../../components/buttons/PrimaryButton";
 import { SecondaryButton } from "../../components/buttons/SecondaryButton";
 import ModalBase from "../../components/modals/ModalBase";
@@ -32,6 +31,7 @@ import {
 } from "../../networks";
 import { useAppNavigation } from "../../utils/navigation";
 import { neutral17 } from "../../utils/style/colors";
+import { layout } from "../../utils/style/layout";
 
 const NotOwnerActions: React.FC<{
   tokenId: string;
@@ -56,13 +56,12 @@ const NotOwnerActions: React.FC<{
       {isPrimary && (
         <PrimaryButton
           size="XL"
-          text="Profile"
+          text="View Profile"
           style={{ marginRight: 24 }}
           onPress={() => {
             onClose();
             navigation.navigate("UserPublicProfile", { id: ownerId });
           }}
-          squaresBackgroundColor={neutral17}
         />
       )}
       <PrimaryButton
@@ -95,7 +94,8 @@ const OwnerActions: React.FC<{
       style={{
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: 42,
+        justifyContent: "center",
+        marginBottom: layout.spacing_x3,
         alignSelf: "center",
       }}
     >
@@ -103,12 +103,11 @@ const OwnerActions: React.FC<{
         <SecondaryButton
           size="M"
           text="View Profile"
-          style={{ marginRight: 24 }}
+          style={{ marginRight: layout.spacing_x3 }}
           onPress={() => {
             onClose();
             navigation.navigate("UserPublicProfile", { id: ownerId });
           }}
-          squaresBackgroundColor={neutral17}
         />
       )}
       <SecondaryButton
@@ -117,24 +116,21 @@ const OwnerActions: React.FC<{
         onPress={() => {
           onClose("TNSUpdateName");
         }}
-        squaresBackgroundColor={neutral17}
       />
       <SecondaryButton
         size="M"
         text="Burn"
-        style={{ marginLeft: 24 }}
+        style={{ marginLeft: layout.spacing_x3 }}
         onPress={() => {
           onClose("TNSBurnName");
         }}
-        squaresBackgroundColor={neutral17}
       />
       {!isPrimary && (
         <SecondaryButton
           size="M"
           text="Set as Primary"
           loader
-          style={{ marginLeft: 24 }}
-          squaresBackgroundColor={neutral17}
+          style={{ marginLeft: layout.spacing_x3 }}
           onPress={async () => {
             try {
               const network = mustGetCosmosNetwork(wallet?.networkId);
@@ -182,11 +178,12 @@ export const TNSConsultNameScreen: React.FC<TNSConsultNameProps> = ({
   const networkId = useSelectedNetworkId();
   const network = getCosmosNetwork(networkId);
   const tokenId = (name + network?.nameServiceTLD || "").toLowerCase();
-  const { nsInfo: token, notFound } = useNSNameInfo(
+  const { notFound } = useNSNameInfo(
     networkId,
     tokenId,
     !!network?.nameServiceTLD,
   );
+
   const { nameOwner } = useNSNameOwner(networkId, tokenId);
   const ownerId = getUserId(networkId, nameOwner);
   const { daos } = useDAOs({ networkId, memberAddress: wallet?.address });
@@ -212,14 +209,16 @@ export const TNSConsultNameScreen: React.FC<TNSConsultNameProps> = ({
       <View
         style={{
           justifyContent: "center",
-          paddingBottom: 20,
         }}
       >
         {notFound ? (
           <BrandText>Not found</BrandText>
         ) : (
           <>
-            <NameNFT style={{ marginBottom: 20, width: "100%" }} name={name} />
+            <NameNFT
+              style={{ marginBottom: layout.spacing_x3, width: "100%" }}
+              name={name}
+            />
             {!notFound &&
               (isOwnedByUser ? (
                 <OwnerActions
@@ -236,29 +235,6 @@ export const TNSConsultNameScreen: React.FC<TNSConsultNameProps> = ({
                   onClose={onClose}
                 />
               ))}
-            {!!token && !!name && (
-              <View
-                style={{
-                  alignItems: "center",
-                }}
-              >
-                {isOwnedByUser ? (
-                  <CopyToClipboard
-                    text={`${window.location.protocol}//${window.location.host}/tns/token/${name}`}
-                    squaresBackgroundColor={neutral17}
-                  />
-                ) : (
-                  <>
-                    {!!token.extension.contract_address && (
-                      <CopyToClipboard
-                        text={token.extension.contract_address}
-                        squaresBackgroundColor={neutral17}
-                      />
-                    )}
-                  </>
-                )}
-              </View>
-            )}
           </>
         )}
       </View>
