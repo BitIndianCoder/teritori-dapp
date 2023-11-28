@@ -34,7 +34,7 @@ export const TNSExploreScreen: React.FC<TNSExploreScreenProps> = ({
 
   return (
     <GradientModalBase
-      label="Find a name"
+      label="Find a Name"
       hideMainSeparator
       onClose={() => onClose()}
       modalStatus={name && nameAvailable ? "success" : "danger"}
