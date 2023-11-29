@@ -1,8 +1,9 @@
 import axios from "axios";
+import { CID } from "multiformats/cid";
 
 import { LocalFileData } from "../utils/types/files";
 
-interface PinataFileProps {
+export interface PinataFileProps {
   file: LocalFileData;
   pinataJWTKey: string;
 }
@@ -23,33 +24,13 @@ export const pinataPinFileToIPFS = async ({
         "Content-Type": "multipart/form-data",
       },
     });
-    return responseFile.data;
+    const v0 = CID.parse(responseFile.data.IpfsHash);
+
+    return {
+      ...responseFile.data,
+      IpfsHash: v0.toV1().toString(),
+    };
   } catch (err) {
     console.error("Error pinning " + file.fileName + " to IPFS", err);
-  }
-};
-
-export const pinataPinFileListToIPFS = async ({
-  file,
-  pinataJWTKey,
-}: {
-  file: FileList;
-  pinataJWTKey: string;
-}) => {
-  try {
-    const formData = new FormData();
-    formData.append("file", file[0]);
-    const responseFile = await axios({
-      method: "post",
-      url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
-      data: formData,
-      headers: {
-        Authorization: "Bearer " + pinataJWTKey,
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return responseFile.data;
-  } catch (err) {
-    console.error("Error pinning " + file[0] + " to IPFS", err);
   }
 };

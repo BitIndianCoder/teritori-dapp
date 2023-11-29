@@ -1,12 +1,15 @@
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useState } from "react";
-import { Image, View, ViewStyle } from "react-native";
+import { View, ViewStyle } from "react-native";
 import { useSelector } from "react-redux";
 
 import tnsProfileAvatar from "../../../assets/default-images/default-name-nft.png";
 import tnsProfileCover from "../../../assets/default-images/tns-profile-cover.png";
 import uploadCloudIcon from "../../../assets/icons/upload-cloud.svg";
-import { pinataPinFileListToIPFS } from "../../candymachine/pinata-upload";
+import {
+  PinataFileProps,
+  pinataPinFileToIPFS,
+} from "../../candymachine/pinata-upload";
 import { useFeedbacks } from "../../context/FeedbacksProvider";
 import { Metadata } from "../../contracts-clients/teritori-name-service/TeritoriNameService.types";
 import { useSelectedNetworkInfo } from "../../hooks/useSelectedNetwork";
@@ -17,7 +20,7 @@ import { neutral17, neutral33, neutral77 } from "../../utils/style/colors";
 import { layout } from "../../utils/style/layout";
 import { BrandText } from "../BrandText";
 import { ExternalLink } from "../ExternalLink";
-import { transformURI } from "../OptimizedImage";
+import { OptimizedImage } from "../OptimizedImage";
 import { PrimaryButton } from "../buttons/PrimaryButton";
 import { TextInputCustom } from "../inputs/TextInputCustom";
 
@@ -35,8 +38,7 @@ const MediaPreview: React.FC<{
 
   const userIPFSKey = useSelector(selectNFTStorageAPI);
 
-  // q: deduplicate this
-  const pickAvatarPic = async () => {
+  const pickDocumentAndUpload = async (callback: (value: string) => void) => {
     const result = await DocumentPicker.getDocumentAsync({ multiple: false });
 
     const pinataJWTKey =
@@ -51,34 +53,11 @@ const MediaPreview: React.FC<{
     }
 
     if (result.output) {
-      const uploadedFiles = await pinataPinFileListToIPFS({
+      const uploadedFiles = await pinataPinFileToIPFS({
         pinataJWTKey,
-        file: result.output,
-      });
-      setImageUrl(transformURI(uploadedFiles.IpfsHash, 50, 50));
-    }
-  };
-
-  const pickBannerPic = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ multiple: false });
-
-    const pinataJWTKey =
-      userIPFSKey || (await generateIpfsKey(selectedNetwork?.id || "", userId));
-    if (!pinataJWTKey) {
-      console.error("upload file err : No Pinata JWT");
-      setToastError({
-        title: "File upload failed",
-        message: "No Pinata JWT",
-      });
-      return;
-    }
-
-    if (result.output) {
-      const uploadedFiles = await pinataPinFileListToIPFS({
-        pinataJWTKey,
-        file: result.output,
-      });
-      setBannerImage(transformURI(uploadedFiles.IpfsHash, 388, 100));
+        file: { file: result.output[0] },
+      } as PinataFileProps);
+      callback(`ipfs://${uploadedFiles.IpfsHash}`);
     }
   };
 
@@ -100,7 +79,7 @@ const MediaPreview: React.FC<{
         variant="labelOutside"
         placeHolder="https://website.com/avatar.jpg"
         postIconSVG={uploadCloudIcon}
-        postIconSVGonPress={pickAvatarPic}
+        postIconSVGonPress={() => pickDocumentAndUpload(setImageUrl)}
         value={image}
         onChangeText={setImageUrl}
         squaresBackgroundColor={neutral17}
@@ -111,7 +90,7 @@ const MediaPreview: React.FC<{
         label="Cover Image URL"
         noBrokenCorners
         postIconSVG={uploadCloudIcon}
-        postIconSVGonPress={pickBannerPic}
+        postIconSVGonPress={() => pickDocumentAndUpload(setBannerImage)}
         variant="labelOutside"
         placeHolder="https://website.com/coverimage.jpg"
         value={bannerImage}
@@ -124,8 +103,10 @@ const MediaPreview: React.FC<{
           marginBottom: layout.spacing_x3,
         }}
       >
-        <Image
-          source={{ uri: bannerImage || tnsProfileCover }}
+        <OptimizedImage
+          sourceURI={bannerImage || tnsProfileCover}
+          width={1388}
+          height={1100}
           style={{
             width: 388,
             height: 100,
@@ -134,9 +115,11 @@ const MediaPreview: React.FC<{
             borderColor: neutral33,
           }}
         />
-        <Image
-          source={{ uri: image || tnsProfileAvatar }}
+        <OptimizedImage
+          sourceURI={image || tnsProfileAvatar}
           resizeMode="cover"
+          width={250}
+          height={250}
           style={{
             width: 50,
             height: 50,
