@@ -58,6 +58,6 @@ const buttonContainerStyle: ViewStyle = {
 };
 const buttonTextStyle: TextStyle = {
   ...fontSemibold14,
-
+  textTransform: "capitalize",
   color: primaryColor,
 };

@@ -114,6 +114,7 @@ export const PrimaryButton: React.FC<{
             style={[
               fontSemibold14,
               {
+                textTransform: "capitalize",
                 color: primaryTextColor,
                 textAlign: "center",
               },
