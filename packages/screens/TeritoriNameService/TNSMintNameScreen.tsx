@@ -189,6 +189,9 @@ export const TNSMintNameModal: React.FC<
   const { setToastError, setToastSuccess } = useFeedbacks();
   const { nsMintPrice: price } = useNSMintPrice(networkId, normalizedTokenId);
   const balance = balances.find((bal) => bal.denom === price?.denom);
+  const canPayForMintName =
+    !!price &&
+    parseInt(balance?.amount || "0", 10) >= parseInt(price.amount, 10);
 
   const runOrProposeTransaction = useRunOrProposeTransaction(userId, userKind);
   const queryClient = useQueryClient();
@@ -305,16 +308,15 @@ export const TNSMintNameModal: React.FC<
         />
         <NameDataForm
           btnLabel={
-            userKind === UserKind.Single
-              ? "Register your username"
-              : "Propose to register"
+            !canPayForMintName
+              ? "Insufficient funds"
+              : userKind === UserKind.Single
+                ? "Register your username"
+                : "Propose to register"
           }
           onPressBtn={handleSubmit}
           initialData={initialData}
-          disabled={
-            !price ||
-            parseInt(balance?.amount || "0", 10) < parseInt(price.amount, 10)
-          }
+          disabled={!canPayForMintName}
         />
       </View>
       <TNSRegisterSuccess visible={isSuccessModal} onClose={handleModalClose} />

@@ -19,8 +19,6 @@ import {
   ReplyToType,
   ZodSocialFeedVideoMetadata,
 } from "../../../components/socialFeed/NewsFeed/NewsFeed.type";
-import { generatePostMetadata } from "../../../components/socialFeed/NewsFeed/NewsFeedQueries";
-import { NotEnoughFundModal } from "../../../components/socialFeed/NewsFeed/NotEnoughFundModal";
 import { DislikeButton } from "../../../components/socialFeed/SocialActions/DislikeButton";
 import { LikeButton } from "../../../components/socialFeed/SocialActions/LikeButton";
 import { ReportButton } from "../../../components/socialFeed/SocialActions/ReportButton";
@@ -113,13 +111,12 @@ export const FeedPostVideoView: FC<{
   const [replyTo, setReplyTo] = useState<ReplyToType>();
   const [newComment, setNewComment] = useState("");
   const [isCreateCommentLoading, setCreateCommentLoading] = useState(false);
-  const [isNotEnoughFundModal, setNotEnoughFundModal] = useState(false);
   const comments = useMemo(
     () => (commentsData ? combineFetchCommentPages(commentsData.pages) : []),
     [commentsData],
   );
 
-  const { makePost, canPayForPost, isProcessing } = useFeedPosting(
+  const { makePost, isProcessing } = useFeedPosting(
     networkId,
     wallet?.userId,
     PostCategory.Comment,
@@ -163,11 +160,7 @@ export const FeedPostVideoView: FC<{
     setNewComment(text);
   };
 
-  const handleSubmitComment = async () => {
-    if (!canPayForPost) {
-      setNotEnoughFundModal(true);
-      return;
-    }
+  const handleSubmitComment = () => {
     setCreateCommentLoading(true);
     try {
       const hasUsername =
@@ -183,22 +176,19 @@ export const FeedPostVideoView: FC<{
       hashtagMatch(newComment)?.map((item) => {
         hashtags.push(item);
       });
-      // ---- Adding hashtag or mentioned user at the end of the message and to the metadata
-      const finalMessage = newComment || "";
-
-      const metadata = generatePostMetadata({
-        title: "",
-        message: finalMessage,
-        files: [],
-        hashtags,
-        mentions,
-        gifs: [],
+      makePost({
+        formValues: {
+          title: "",
+          hashtags,
+          mentions,
+          message: newComment || "",
+          files: [],
+          gifs: [],
+        },
+        parentPostIdentifier: hasUsername
+          ? replyTo?.parentId
+          : localPost.identifier,
       });
-
-      await makePost(
-        JSON.stringify(metadata),
-        hasUsername ? replyTo?.parentId : localPost.identifier,
-      );
     } catch (err) {
       console.error("post submit err", err);
       setToastError({
@@ -487,13 +477,6 @@ export const FeedPostVideoView: FC<{
           )}
         </View>
       </Animated.ScrollView>
-
-      {isNotEnoughFundModal && (
-        <NotEnoughFundModal
-          visible
-          onClose={() => setNotEnoughFundModal(false)}
-        />
-      )}
     </ScreenContainer>
   );
 };

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
 
 import priceSVG from "../../../assets/icons/price.svg";
 import { BrandText } from "../../components/BrandText";
@@ -18,10 +17,7 @@ import {
   NewArticleFormValues,
   PostCategory,
 } from "../../components/socialFeed/NewsFeed/NewsFeed.type";
-import { generateArticleMetadata } from "../../components/socialFeed/NewsFeed/NewsFeedQueries";
-import { NotEnoughFundModal } from "../../components/socialFeed/NewsFeed/NotEnoughFundModal";
 import { RichText } from "../../components/socialFeed/RichText";
-import { PublishValues } from "../../components/socialFeed/RichText/RichText.type";
 import { SpacerColumn } from "../../components/spacer";
 import { useFeedbacks } from "../../context/FeedbacksProvider";
 import { useFeedPosting } from "../../hooks/feed/useFeedPosting";
@@ -29,12 +25,6 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import { useSelectedNetworkId } from "../../hooks/useSelectedNetwork";
 import useSelectedWallet from "../../hooks/useSelectedWallet";
 import { NetworkFeature } from "../../networks";
-import { selectNFTStorageAPI } from "../../store/slices/settings";
-import {
-  generateIpfsKey,
-  ipfsURLToHTTPURL,
-  uploadFilesToPinata,
-} from "../../utils/ipfs";
 import { IMAGE_MIME_TYPES } from "../../utils/mime";
 import { ScreenFC, useAppNavigation } from "../../utils/navigation";
 import { ARTICLE_THUMBNAIL_IMAGE_HEIGHT } from "../../utils/social-feed";
@@ -47,7 +37,6 @@ import {
 import { fontSemibold13, fontSemibold20 } from "../../utils/style/fonts";
 import { layout, screenContentMaxWidth } from "../../utils/style/layout";
 import { pluralOrNot } from "../../utils/text";
-import { RemoteFileData } from "../../utils/types/files";
 
 //TODO: In mobile : Make ActionsContainer accessible (floating button ?)
 
@@ -56,13 +45,10 @@ export const FeedNewArticleScreen: ScreenFC<"FeedNewArticle"> = () => {
   const wallet = useSelectedWallet();
   const selectedNetworkId = useSelectedNetworkId();
   const userId = wallet?.userId;
-  const userIPFSKey = useSelector(selectNFTStorageAPI);
-  const [isNotEnoughFundModal, setNotEnoughFundModal] = useState(false);
-  const [isLoading, setLoading] = useState(false);
   const {
-    makePost,
+    makeArticle,
     isProcessing,
-    canPayForPost,
+    isLoading,
     freePostCount,
     prettyPublishingFee,
   } = useFeedPosting(selectedNetworkId, userId, PostCategory.Article, () => {
@@ -70,8 +56,7 @@ export const FeedNewArticleScreen: ScreenFC<"FeedNewArticle"> = () => {
     navigateBack();
     reset();
   });
-
-  const { setToastSuccess, setToastError } = useFeedbacks();
+  const { setToastSuccess } = useFeedbacks();
   const navigation = useAppNavigation();
 
   const {
@@ -101,92 +86,6 @@ export const FeedNewArticleScreen: ScreenFC<"FeedNewArticle"> = () => {
   //TODO: Keep short post formValues when returning to short post
   const navigateBack = () => navigation.navigate("Feed");
 
-  const onPublish = async (values: PublishValues) => {
-    setLoading(true);
-    try {
-      if (!canPayForPost) {
-        return setNotEnoughFundModal(true);
-      }
-
-      const localFiles = [
-        ...(formValues.files || []),
-        ...values.images,
-        ...values.audios,
-        ...values.videos,
-      ];
-
-      let pinataJWTKey = undefined;
-      if (localFiles?.length || formValues.thumbnailImage) {
-        pinataJWTKey =
-          userIPFSKey || (await generateIpfsKey(selectedNetworkId, userId));
-      }
-
-      // Upload thumbnail to IPFS
-      let thumbnailImageRemoteFile: RemoteFileData | undefined;
-      if (formValues.thumbnailImage && pinataJWTKey) {
-        const remoteFiles = await uploadFilesToPinata({
-          files: [formValues.thumbnailImage],
-          pinataJWTKey,
-        });
-        thumbnailImageRemoteFile = remoteFiles[0];
-      }
-
-      // Upload other files to IPFS
-      let remoteFiles: RemoteFileData[] = [];
-      if (localFiles?.length && pinataJWTKey) {
-        remoteFiles = await uploadFilesToPinata({
-          files: localFiles,
-          pinataJWTKey,
-        });
-      }
-
-      // If the user uploaded files, but they are not pinned to IPFS, it returns files with empty url, so this is an error.
-      if (
-        (localFiles?.length && !remoteFiles.find((file) => file.url)) ||
-        (formValues.thumbnailImage && !thumbnailImageRemoteFile)
-      ) {
-        console.error("upload file err : Fail to pin to IPFS");
-        setToastError({
-          title: "File upload failed",
-          message: "Fail to pin to IPFS, please try to Publish again",
-        });
-        setLoading(false);
-        return;
-      }
-
-      let message = formValues.message || "";
-
-      if (remoteFiles.length) {
-        localFiles?.map((file, index) => {
-          // Audio are not in the HTML for now
-          if (remoteFiles[index]?.fileType !== "audio") {
-            message = message.replace(
-              file.url,
-              ipfsURLToHTTPURL(remoteFiles[index].url),
-            );
-          }
-        });
-      }
-
-      const metadata = generateArticleMetadata({
-        ...formValues,
-        thumbnailImage: thumbnailImageRemoteFile,
-        gifs: values.gifs,
-        files: remoteFiles,
-        mentions: values.mentions,
-        hashtags: values.hashtags,
-        message: values.html,
-      });
-      await makePost(JSON.stringify(metadata));
-    } catch (err) {
-      setToastError({
-        title: "Something went wrong.",
-        message: err instanceof Error ? err.message : `${err}`,
-      });
-      console.error("post submit error", err);
-    }
-  };
-
   // // OpenGraph URL preview
   // useEffect(() => {
   //   addedUrls.forEach(url => {
@@ -207,11 +106,6 @@ export const FeedNewArticleScreen: ScreenFC<"FeedNewArticle"> = () => {
       onBackPress={navigateBack}
       footerChildren
     >
-      <NotEnoughFundModal
-        onClose={() => setNotEnoughFundModal(false)}
-        visible={isNotEnoughFundModal}
-      />
-
       <View
         style={{
           marginTop: isMobile ? layout.spacing_x2 : layout.contentSpacing,
@@ -320,7 +214,9 @@ export const FeedNewArticleScreen: ScreenFC<"FeedNewArticle"> = () => {
                   !formValues.thumbnailImage ||
                   !wallet
                 }
-                onPublish={onPublish}
+                onPublish={(richTextPublishValues) =>
+                  makeArticle({ formValues, richTextPublishValues })
+                }
                 authorId={userId || ""}
                 postId=""
               />

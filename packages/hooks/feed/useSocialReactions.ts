@@ -1,15 +1,32 @@
 import { GnoJSONRPCProvider } from "@gnolang/gno-js-client";
 import { Dispatch, SetStateAction } from "react";
 
-import { useSelectedNetworkInfo } from "./useSelectedNetwork";
-import useSelectedWallet from "./useSelectedWallet";
-import { Post } from "../api/feed/v1/feed";
-import { signingSocialFeedClient } from "../client-creators/socialFeedClient";
-import { TERITORI_FEED_ID } from "../components/socialFeed/const";
-import { useTeritoriSocialFeedReactPostMutation } from "../contracts-clients/teritori-social-feed/TeritoriSocialFeed.react-query";
-import { mustGetGnoNetwork, NetworkKind } from "../networks";
-import { adenaDoContract } from "../utils/gno";
-import { getUpdatedReactions } from "../utils/social-feed";
+import { useFeedPostFee } from "./useFeedPostFee";
+import { Post } from "../../api/feed/v1/feed";
+import { Coin } from "../../api/teritori-chain/cosmos/base/v1beta1/coin";
+import { signingSocialFeedClient } from "../../client-creators/socialFeedClient";
+import { PostCategory } from "../../components/socialFeed/NewsFeed/NewsFeed.type";
+import { TERITORI_FEED_ID } from "../../components/socialFeed/const";
+import {
+  ControlledWalletAction,
+  useWalletControl,
+} from "../../context/WalletControlProvider";
+import { useTeritoriSocialFeedReactPostMutation } from "../../contracts-clients/teritori-social-feed/TeritoriSocialFeed.react-query";
+import {
+  getStakingCurrency,
+  mustGetGnoNetwork,
+  NetworkFeature,
+  NetworkKind,
+} from "../../networks";
+import { adenaDoContract } from "../../utils/gno";
+import {
+  DISLIKE_EMOJI,
+  getUpdatedReactions,
+  LIKE_EMOJI,
+} from "../../utils/social-feed";
+import { useBalances } from "../useBalances";
+import { useSelectedNetworkInfo } from "../useSelectedNetwork";
+import useSelectedWallet from "../useSelectedWallet";
 
 export const useSocialReactions = ({
   post,
@@ -21,6 +38,20 @@ export const useSocialReactions = ({
   const selectedNetworkInfo = useSelectedNetworkInfo();
   const selectedNetworkId = selectedNetworkInfo?.id || "";
   const wallet = useSelectedWallet();
+  const { controlWalletFunds } = useWalletControl();
+  const balances = useBalances(selectedNetworkId, wallet?.address);
+  const { postFee } = useFeedPostFee(selectedNetworkId, PostCategory.Reaction);
+  const feeCurrency = getStakingCurrency(selectedNetworkId);
+  const feeBalance = balances.find((bal) => bal.denom === feeCurrency?.denom);
+  const canPayForReaction =
+    !!feeBalance?.amount &&
+    Number(feeBalance.amount) > 0 &&
+    postFee <= Number(feeBalance.amount);
+  const cost: Coin = {
+    amount: postFee.toString(),
+    denom: feeCurrency?.denom || "",
+  };
+
   const { mutate: postMutate, isLoading: isPostMutationLoading } =
     useTeritoriSocialFeedReactPostMutation({
       onSuccess(_data, variables) {
@@ -91,5 +122,22 @@ export const useSocialReactions = ({
     }
   };
 
-  return { handleReaction, isPostMutationLoading };
+  return {
+    handleReaction: (emoji: string) =>
+      controlWalletFunds({
+        callback: () => handleReaction(emoji),
+        canPay: canPayForReaction,
+        action:
+          emoji === LIKE_EMOJI
+            ? ControlledWalletAction.LIKE
+            : emoji === DISLIKE_EMOJI
+              ? ControlledWalletAction.DISLIKE
+              : ControlledWalletAction.REACT,
+        forceNetworkFeature: NetworkFeature.SocialFeed,
+        network: selectedNetworkInfo,
+        cost,
+        currency: feeCurrency,
+      }),
+    isPostMutationLoading,
+  };
 };
